@@ -1,0 +1,22 @@
+%{ 
+#include <stdio.h> 
+%} 
+%% 
+abb { printf("Token recognized: 'abb'\n"); } 
+[a-z]+ { printf("Token recognized: '%s'\n", yytext); } 
+[ \t\n] ; /* Ignore whitespaces */ 
+. 
+{ printf("Unrecognized character: %s\n", yytext); } 
+%% 
+int main() { 
+yylex(); 
+return 0; 
+} 
+int yywrap() { 
+return 1; 
+}
+Commands:
+flex SPCC5.l
+gcc SPCC5 lex.yy.c
+SPCC5.exe SPCC5.c
+abb babb abba xabb yyy
