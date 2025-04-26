@@ -1,0 +1,125 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+
+#define MAX_EXPRESSIONS 100
+
+typedef struct {
+    char left[10];
+    char right[50];
+    bool active;
+} Expression;
+
+Expression expressions[MAX_EXPRESSIONS];
+int expr_count = 0;
+
+// Function to add an expression
+void add_expression(const char* left, const char* right) {
+    if (expr_count >= MAX_EXPRESSIONS) return;
+    strcpy(expressions[expr_count].left, left);
+    strcpy(expressions[expr_count].right, right);
+    expressions[expr_count].active = true;
+    expr_count++;
+}
+
+// Function to print all expressions
+void print_expressions() {
+    printf("Current Expressions:\n");
+    printf("----------------------\n");
+    for (int i = 0; i < expr_count; i++) {
+        if (expressions[i].active) {
+            printf("%s = %s\n", expressions[i].left, expressions[i].right);
+        }
+    }
+    printf("\n");
+}
+
+// Common Sub-expression Elimination
+void common_subexpression_elimination() {
+    printf("Applying Common Sub-expression Elimination...\n\n");
+
+    for (int i = 0; i < expr_count; i++) {
+        if (!expressions[i].active) continue;
+
+        for (int j = i + 1; j < expr_count; j++) {
+            if (!expressions[j].active) continue;
+
+            if (strcmp(expressions[i].right, expressions[j].right) == 0 &&
+                strcmp(expressions[i].left, expressions[j].left) != 0) {
+
+                printf("Found common subexpression: %s = %s\n", expressions[j].left, expressions[j].right);
+                printf("Replacing %s with %s in subsequent expressions\n\n", expressions[j].left, expressions[i].left);
+
+                for (int k = j + 1; k < expr_count; k++) {
+                    if (strstr(expressions[k].right, expressions[j].left)) {
+                        char* pos = strstr(expressions[k].right, expressions[j].left);
+                        int index = pos - expressions[k].right;
+
+                        char new_right[50] = {0};
+                        strncpy(new_right, expressions[k].right, index);
+                        strcat(new_right, expressions[i].left);
+                        strcat(new_right, pos + strlen(expressions[j].left));
+
+                        strcpy(expressions[k].right, new_right);
+                    }
+                }
+
+                expressions[j].active = false;
+            }
+        }
+    }
+}
+
+// Reduction in Strength
+void reduction_in_strength() {
+    printf("Applying Reduction in Strength...\n\n");
+
+    for (int i = 0; i < expr_count; i++) {
+        if (!expressions[i].active) continue;
+
+        char* op = strstr(expressions[i].right, " * ");
+        if (op != NULL) {
+            char left_operand[20], right_operand[20];
+            sscanf(expressions[i].right, "%s * %s", left_operand, right_operand);
+
+            if (atoi(right_operand) > 0) {
+                int val = atoi(right_operand);
+                if ((val & (val - 1)) == 0) { // Power of 2
+                    int shift = 0;
+                    while (val > 1) {
+                        val >>= 1;
+                        shift++;
+                    }
+
+                    printf("Found multiplication by %d (2^%d) in: %s = %s\n", (1 << shift), shift, expressions[i].left, expressions[i].right);
+                    printf("Replacing with left shift by %d\n\n", shift);
+
+                    sprintf(expressions[i].right, "%s << %d", left_operand, shift);
+                }
+            }
+        }
+    }
+}
+
+int main() {
+    // Initialize with example expressions
+    add_expression("t1", "a + b");
+    add_expression("t2", "a + b"); // Common subexpression
+    add_expression("t3", "t2 * c");
+    add_expression("t4", "d * 16"); // Can reduce to shift
+    add_expression("t5", "a + b"); // Common subexpression
+    add_expression("t6", "t5 * 8"); // Can reduce to shift
+
+    printf("Original Expressions:\n");
+    print_expressions();
+
+    // Apply optimizations
+    common_subexpression_elimination();
+    print_expressions();
+
+    reduction_in_strength();
+    print_expressions();
+
+    return 0;
+}
