@@ -1,0 +1,91 @@
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+
+#define SIZE 10
+
+char productions[SIZE][SIZE];
+int n;
+
+int followVisited[26]; // for A-Z to check if already visited
+int firstVisited[26];
+
+void findFirst(char c) {
+    if (!isupper(c)) {
+        printf("%c ", c);
+        return;
+    }
+
+    if (firstVisited[c-'A']) return; // already processed
+    firstVisited[c-'A'] = 1;
+
+    for (int i = 0; i < n; i++) {
+        if (productions[i][0] == c) {
+            if (!isupper(productions[i][3])) {
+                printf("%c ", productions[i][3]);
+            } else {
+                findFirst(productions[i][3]);
+            }
+        }
+    }
+}
+
+void findFollow(char c) {
+    if (followVisited[c-'A']) return; // already processed
+    followVisited[c-'A'] = 1;
+
+    if (c == productions[0][0]) {
+        printf("$ ");
+    }
+
+    for (int i = 0; i < n; i++) {
+        for (int j = 3; productions[i][j] != '\0'; j++) {
+            if (productions[i][j] == c) {
+                if (productions[i][j + 1] != '\0') {
+                    if (!isupper(productions[i][j + 1])) {
+                        printf("%c ", productions[i][j + 1]);
+                    } else {
+                        findFirst(productions[i][j + 1]);
+                    }
+                } else {
+                    if (productions[i][0] != c) {
+                        findFollow(productions[i][0]);
+                    }
+                }
+            }
+        }
+    }
+}
+
+int main() {
+    printf("Enter number of productions: ");
+    scanf("%d", &n);
+
+    printf("Enter productions like E->TR:\n");
+    for (int i = 0; i < n; i++) {
+        scanf("%s", productions[i]);
+    }
+
+    printf("\nFIRST sets:\n");
+    for (int i = 0; i < n; i++) {
+        memset(firstVisited, 0, sizeof(firstVisited));
+        printf("FIRST(%c) = { ", productions[i][0]);
+        findFirst(productions[i][0]);
+        printf("}\n");
+    }
+
+    printf("\nFOLLOW sets:\n");
+    for (int i = 0; i < n; i++) {
+        memset(followVisited, 0, sizeof(followVisited));
+        printf("FOLLOW(%c) = { ", productions[i][0]);
+        findFollow(productions[i][0]);
+        printf("}\n");
+    }
+
+    return 0;
+}
+Enter number of productions: 3
+Enter productions like E->TR:
+E->TR
+R->+TR
+T->id
