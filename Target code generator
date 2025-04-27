@@ -1,0 +1,58 @@
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+
+// Function to generate target code (simple pseudo-assembly for arithmetic operations)
+void generate_target_code(const char* expression) {
+    int reg_count = 0;  // Registers are simulated by counting
+    int temp_reg = 0;   // Temporary register index
+    char temp_var[10];  // Temporary variable to hold the result
+
+    // Go through the expression character by character
+    for (int i = 0; expression[i] != '\0'; i++) {
+        if (isdigit(expression[i])) {
+            // If the character is a number, load it into a register
+            printf("LOAD R%d, %c\n", reg_count, expression[i]);
+            reg_count++;  // Increment the register count
+        } else if (expression[i] == '+') {
+            // If it's a '+' operator, perform addition using registers
+            printf("ADD R%d, R%d\n", reg_count - 2, reg_count - 1);
+            reg_count--;  // Decrease register count since the result is in one register
+        } else if (expression[i] == '-') {
+            // If it's a '-' operator, perform subtraction using registers
+            printf("SUB R%d, R%d\n", reg_count - 2, reg_count - 1);
+            reg_count--;
+        } else if (expression[i] == '*') {
+            // If it's a '*' operator, perform multiplication
+            printf("MUL R%d, R%d\n", reg_count - 2, reg_count - 1);
+            reg_count--;
+        } else if (expression[i] == '/') {
+            // If it's a '/' operator, perform division
+            printf("DIV R%d, R%d\n", reg_count - 2, reg_count - 1);
+            reg_count--;
+        }
+    }
+
+    // Output the final result in a temporary variable
+    printf("STORE R%d, result\n", reg_count - 1);
+    printf("End of target code generation.\n");
+}
+
+int main() {
+    // Example arithmetic expression
+    char expression[50];
+
+    printf("Enter an arithmetic expression (e.g., 3+4*2): ");
+    fgets(expression, sizeof(expression), stdin);
+    
+    // Remove the newline character if any
+    size_t len = strlen(expression);
+    if (len > 0 && expression[len - 1] == '\n') {
+        expression[len - 1] = '\0';
+    }
+
+    printf("\nGenerated Target Code (Pseudo-Assembly):\n");
+    generate_target_code(expression);
+
+    return 0;
+}
