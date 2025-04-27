@@ -1,0 +1,95 @@
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
+#define MAX_SYMBOLS 100
+#define MAX_LINE_LENGTH 100
+
+// Structure to hold the symbol table entries
+typedef struct {
+    char label[20];  // Label name
+    int address;     // Memory address for the label
+} Symbol;
+
+// The symbol table
+Symbol symbolTable[MAX_SYMBOLS];
+int symbolCount = 0;
+
+// Function to add label and its address to the symbol table
+void addSymbol(char* label, int address) {
+    if (symbolCount < MAX_SYMBOLS) {
+        strcpy(symbolTable[symbolCount].label, label);
+        symbolTable[symbolCount].address = address;
+        symbolCount++;
+    } else {
+        printf("Symbol table is full\n");
+    }
+}
+
+// Function to print the symbol table
+void printSymbolTable() {
+    printf("\nSymbol Table:\n");
+    printf("Label\t\tAddress\n");
+    for (int i = 0; i < symbolCount; i++) {
+        printf("%s\t\t%d\n", symbolTable[i].label, symbolTable[i].address);
+    }
+}
+
+// Function to perform the first pass
+void firstPass(FILE* sourceFile) {
+    char line[MAX_LINE_LENGTH];
+    int memoryAddress = 0; // Starting address for the program
+
+    while (fgets(line, sizeof(line), sourceFile)) {
+        char label[20];
+        char instruction[MAX_LINE_LENGTH];
+        int addressAssigned = 0;
+
+        // Check if the line contains a label
+        if (sscanf(line, "%s:", label) == 1) {
+            // If the line starts with a label, store it in the symbol table
+            addSymbol(label, memoryAddress);
+            // Extract the instruction part
+            sscanf(line + strlen(label) + 1, "%[^\n]", instruction);
+            addressAssigned = 1;
+        } else {
+            // If there's no label, just read the instruction
+            strcpy(instruction, line);
+        }
+
+        // Increment memory address (in a real assembler, we may use instruction length)
+        if (!addressAssigned) {
+            memoryAddress++;
+        }
+
+        // In the first pass, we just print the instruction with its memory address
+        printf("Memory Address: %d\tInstruction: %s", memoryAddress, instruction);
+        memoryAddress++;
+    }
+}
+
+int main() {
+    // Open the source assembly file
+    FILE* sourceFile = fopen("source.asm", "r");
+    if (!sourceFile) {
+        printf("Error: Could not open source file\n");
+        return 1;
+    }
+
+    // Perform the first pass
+    firstPass(sourceFile);
+
+    // Print the symbol table
+    printSymbolTable();
+
+    // Close the source file
+    fclose(sourceFile);
+
+    return 0;
+}
+source.asm:
+START:   ADD R1, R2
+         SUB R3, R4
+LOOP:    MUL R5, R6
+END:     DIV R7, R8
+FILE* sourceFile = fopen("/path/to/source.asm", "r");
